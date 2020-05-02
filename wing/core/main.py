@@ -388,7 +388,7 @@ class WingOfEvidence(BaseEstimator, TransformerMixin):
 
 class WingsOfEvidence(BaseEstimator, TransformerMixin):
     def __init__(self, bin_minimal_size=.05, is_monotone=False,
-                 bin_size_increase=.05, columns_to_apply="all",
+                 bin_size_increase=.05, columns_to_apply="all", discrete_columns_names=None,
                  n_initial=10, n_target=5, mass_spec_values={},
                  optimizer="ilya-binning", only_values=True,
                  tree_random_state=None, verbose=False):
@@ -408,6 +408,7 @@ class WingsOfEvidence(BaseEstimator, TransformerMixin):
 
         """
         self.columns_to_apply = columns_to_apply
+        self.discrete_columns_names = discrete_columns_names or []
         self.mass_spec_values = mass_spec_values
         self.n_initial = n_initial
         self.n_target = n_target
@@ -445,7 +446,12 @@ class WingsOfEvidence(BaseEstimator, TransformerMixin):
         self.fitted_wing = {}
         self.gini_dict = {}
         self.error_columns = []
+        discrete_columns_names = set(self.discrete_columns_names)
         for column in self.columns_to_apply:
+            if column in discrete_columns_names:
+                vector_type = "d"
+            else:
+                vector_type = "c"
             self._print("==="*20)
             self._print("Working with variable: %s"%column)
             X_vec = X[column]
@@ -454,7 +460,7 @@ class WingsOfEvidence(BaseEstimator, TransformerMixin):
                 spec_values = {}
             else:
                 spec_values = column_dict
-            wing = WingOfEvidence(variable_name=column, vector_type="c", n_initial=self.n_initial,
+            wing = WingOfEvidence(variable_name=column, vector_type=vector_type, n_initial=self.n_initial,
                                   n_target=self.n_target, spec_values=spec_values,
                                   optimizer=self.optimizer, verbose=self.verbose,
                                   bin_minimal_size=self.bin_minimal_size, is_monotone=self.is_monotone,
